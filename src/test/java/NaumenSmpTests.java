@@ -28,11 +28,12 @@ public class NaumenSmpTests {
         Configuration.browserSize = "1140x1005";
         Selenide.open(BASE_URL);
         
-        // Ждем загрузку формы авторизации
-        $("#username").shouldBe(visible);
+        // Ждем загрузку формы авторизации и проверяем её элементы
+        $("#username").shouldBe(visible.because("Поле для ввода логина не отображается"));
+        $("#password").shouldBe(visible.because("Поле для ввода пароля не отображается"));
+        $("#submit-button").shouldBe(visible.because("Кнопка входа не отображается"));
         
         // Авторизация
-        $("#username").click();
         $("#username").setValue(USERNAME);
         $("#password").setValue(PASSWORD);
         $("#submit-button").click();
@@ -44,70 +45,74 @@ public class NaumenSmpTests {
     @AfterEach
     public void tearDown() {
         // Выход из системы
+        $("#gwt-debug-logout").shouldBe(visible.because("Кнопка выхода не найдена"));
         $("#gwt-debug-logout").click();
         Selenide.closeWindow();
+    }
+    
+    private void openSidebarIfClosed() {
+        SelenideElement navContent = $("#gwt-debug-navContent");
+        if (navContent.getCssValue("display").equals("none")) {
+            $(".e044").click();
+        }
+        // Ждем загрузки панели навигации
+        $("#gwt-debug-navPanel").shouldBe(visible.because("Не загрузилась панель навигации"), Duration.ofSeconds(30));
     }
     
     @Test
     public void addFavorite() {
         String title = getId();
         
-        // Добавляем в избранное
+        // Проверяем наличие и нажимаем кнопку добавления в избранное
         $("#gwt-debug-favorite").shouldBe(visible.because("Не найдена кнопка добавления в избранные"));
         $("#gwt-debug-favorite").click();
         
-        // Ждем появления формы
-        $("#gwt-debug-itemTitle-value").shouldBe(visible);
+        // Проверяем появление формы добавления в избранное
+        $("#gwt-debug-itemTitle-value").shouldBe(visible.because("Не появилось поле для ввода названия"));
         $("#gwt-debug-itemTitle-value").setValue(title);
+        
+        // Проверяем кнопку сохранения
+        $("#gwt-debug-apply").shouldBe(visible.because("Не найдена кнопка сохранения"));
         $("#gwt-debug-apply").click();
         
-        // Открываем сайдбар если закрыт
-        SelenideElement navContent = $("#gwt-debug-navContent");
-        if (navContent.getCssValue("display").equals("none")) {
-            $(".e044").click();
-        }
+        // Открываем сайдбар
+        openSidebarIfClosed();
         
-        // Ждем загрузки панели навигации
-        $("#gwt-debug-navPanel").shouldBe(visible.because("Не загрузилась панель навигации"), Duration.ofSeconds(30));
-        
-        // Проверяем наличие добавленной карточки
+        // Проверяем что карточка появилась в избранном
         $(byXpath(String.format("//a[@id='gwt-debug-title']/div[text()='%s']", title)))
-            .shouldBe(visible.because("Карточка не появилась в избранном"));
-        
-        // Удаляем тестовую карточку
-        $("#gwt-debug-editFavorites").click();
-        $(".del:nth-child(1)").click();
-        $("#gwt-debug-yes").click();
-        $("#gwt-debug-apply").click();
+            .shouldBe(visible.because("Добавленная карточка не появилась в избранном"));
     }
     
     @Test
     public void deleteFavorite() {
         String title = getId();
         
-        // Добавляем карточку для последующего удаления
+        // Добавляем карточку для удаления
         $("#gwt-debug-favorite").shouldBe(visible.because("Не найдена кнопка добавления в избранные"));
         $("#gwt-debug-favorite").click();
         $("#gwt-debug-itemTitle-value").setValue(title);
         $("#gwt-debug-apply").click();
         
-        // Открываем сайдбар если закрыт
-        SelenideElement navContent = $("#gwt-debug-navContent");
-        if (navContent.getCssValue("display").equals("none")) {
-            $(".e044").click();
-        }
+        // Открываем сайдбар
+        openSidebarIfClosed();
         
-        // Ждем загрузки панели навигации
-        $("#gwt-debug-navPanel").shouldBe(visible.because("Не загрузилась панель навигации"), Duration.ofSeconds(30));
-        
-        // Проверяем наличие карточки перед удалением
+        // Проверяем наличие добавленной карточки перед удалением
         $(byXpath(String.format("//a[@id='gwt-debug-title']/div[text()='%s']", title)))
-            .shouldBe(visible.because("Карточка не найдена в избранном"));
-        
-        // Удаляем карточку
+            .shouldBe(visible.because("Карточка не найдена в избранном перед удалением"));
+            
+        // Проверяем наличие и нажимаем кнопку редактирования избранного
+        $("#gwt-debug-editFavorites").shouldBe(visible.because("Не найдена кнопка редактирования избранного"));
         $("#gwt-debug-editFavorites").click();
+        
+        // Проверяем наличие и нажимаем кнопку удаления
+        $(".del:nth-child(1)").shouldBe(visible.because("Не найдена кнопка удаления карточки"));
         $(".del:nth-child(1)").click();
+        
+        // Проверяем появление и работу диалога подтверждения
+        $("#gwt-debug-yes").shouldBe(visible.because("Не появилось окно подтверждения удаления"));
         $("#gwt-debug-yes").click();
+        
+        // Сохраняем изменения
         $("#gwt-debug-apply").click();
         
         // Проверяем что карточка удалена
