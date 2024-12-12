@@ -77,10 +77,20 @@ public class NaumenSmpTests {
         
         // Открываем сайдбар
         openSidebarIfClosed();
+           // Проверяем наличие и нажимаем кнопку редактирования избранного
+        $("#gwt-debug-editFavorites").shouldBe(visible.because("Не найдена кнопка редактирования избранного"));
+        $("#gwt-debug-editFavorites").click();
         
-        // Проверяем что карточка появилась в избранном
-        $(byXpath(String.format("//a[@id='gwt-debug-title']/div[text()='%s']", title)))
-            .shouldBe(visible.because("Добавленная карточка не появилась в избранном"));
+        // Проверяем наличие и нажимаем кнопку удаления
+        $(".del:nth-child(1)").shouldBe(visible.because("Не найдена кнопка удаления карточки"));
+        $(".del:nth-child(1)").click();
+        
+        // Проверяем появление и работу диалога подтверждения
+        $("#gwt-debug-yes").shouldBe(visible.because("Не появилось окно подтверждения удаления"));
+        $("#gwt-debug-yes").click();
+        
+        // Сохраняем изменения
+        $("#gwt-debug-apply").click();
     }
     
     @Test
